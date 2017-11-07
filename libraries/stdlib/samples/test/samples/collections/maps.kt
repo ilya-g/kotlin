@@ -99,12 +99,11 @@ class Maps {
         fun forOverEntries() {
             val map = mapOf("beverage" to 2.7, "meal" to 12.4, "dessert" to 5.8)
 
+            val console = CheckedConsole()
             for ((key, value) in map) {
-                println("$key - $value") // prints: beverage - 2.7
-                                         // prints: meal - 12.4
-                                         // prints: dessert - 5.8
+                console.out.println("$key - $value")
             }
-
+            console.assertPrintsLines("beverage - 2.7", "meal - 12.4", "dessert - 5.8")
         }
     }
 

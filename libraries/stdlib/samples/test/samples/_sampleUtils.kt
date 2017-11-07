@@ -16,10 +16,24 @@
 
 package samples
 
+import java.io.PrintWriter
+import java.io.StringWriter
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 typealias Sample = org.junit.Test
 typealias RunWith = org.junit.runner.RunWith
 typealias Enclosed = org.junit.experimental.runners.Enclosed
 
 fun assertPrints(expression: Any?, expectedOutput: String) = assertEquals(expectedOutput, expression.toString())
+
+class CheckedConsole {
+    val writer = StringWriter()
+    val out = PrintWriter(writer)
+
+    fun assertPrintsLines(vararg lines: String) {
+        val actualLines = writer.toString().lines()
+        assertTrue(actualLines.lastOrNull().isNullOrEmpty(), "Output expected to end with newline")
+        assertEquals(lines.asList(), actualLines.dropLast(1))
+    }
+}
