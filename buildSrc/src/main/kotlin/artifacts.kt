@@ -130,6 +130,8 @@ fun Project.publish(body: Upload.() -> Unit = {}): Upload {
             throw GradleException("classesDirsArtifact() is incompatible with publish(), see sources comments for details")
     }
 
+    (tasks.getByName("install") as Upload).body()
+
     return (tasks.getByName("uploadArchives") as Upload).apply {
         body()
     }

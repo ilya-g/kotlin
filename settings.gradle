@@ -197,6 +197,8 @@ include ":kotlin-build-common",
         ":kotlinx-serialization-ide-plugin",
         ":kotlin-serialization",
         ":kotlin-serialization-unshaded",
+        
+        ":kotlin-bom",
         ":kotlin-idl2k"
 
 def isTeamcityBuild = hasProperty("teamcity") || System.getenv("TEAMCITY_VERSION") != null
@@ -319,3 +321,4 @@ project(':kotlinx-serialization-ide-plugin').projectDir = file("$rootDir/plugins
 project(':kotlin-serialization').projectDir = file("$rootDir/libraries/tools/kotlin-serialization")
 project(':kotlin-serialization-unshaded').projectDir = file("$rootDir/libraries/tools/kotlin-serialization-unshaded")
 project(':kotlin-idl2k').projectDir = file("$rootDir/libraries/tools/idl2k")
+project(':kotlin-bom').projectDir = file("$rootDir/libraries/tools/kotlin-bom")

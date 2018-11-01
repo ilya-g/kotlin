@@ -4,7 +4,9 @@ import org.codehaus.groovy.runtime.InvokerHelper
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Dependency
+import org.gradle.api.artifacts.maven.GroovyMavenDeployer
 import org.gradle.api.artifacts.maven.MavenDeployment
+import org.gradle.api.artifacts.maven.MavenPom
 import org.gradle.api.artifacts.maven.MavenResolver
 
 import org.gradle.api.plugins.MavenRepositoryHandlerConvention
@@ -110,10 +112,13 @@ open class PublishedKotlinModule : Plugin<Project> {
 
                 var repository by Delegates.notNull<MavenRemoteRepository>()
 
+                var deployer: GroovyMavenDeployer? by extra
+                var pom: MavenPom? by extra
+
                 repositories {
                     withConvention(MavenRepositoryHandlerConvention::class) {
 
-                        mavenDeployer {
+                        deployer = mavenDeployer {
                             withGroovyBuilder {
                                 "beforeDeployment" {
                                     val signing = project.the<SigningExtension>()
@@ -129,6 +134,7 @@ open class PublishedKotlinModule : Plugin<Project> {
                             }
 
                             configurePom()
+                            pom = this.pom
                         }
                     }
                 }
@@ -143,10 +149,14 @@ open class PublishedKotlinModule : Plugin<Project> {
             install.apply {
                 configuration = project.configurations.getByName(Dependency.ARCHIVES_CONFIGURATION)
                 description = "Installs the 'archives' artifacts into the local Maven repository."
+
+                var pom: MavenPom? by extra
+
                 repositories {
                     withConvention(MavenRepositoryHandlerConvention::class) {
                         mavenInstaller {
                             configurePom()
+                            pom = this.pom
                         }
                     }
                 }
