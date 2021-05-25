@@ -1,3 +1,0 @@
-# Trust mimalloc to be thread safe.
-race:^mi_
-race:^_mi_
