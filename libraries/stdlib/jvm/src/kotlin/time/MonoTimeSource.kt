@@ -18,6 +18,9 @@ internal actual object MonotonicTimeSource : TimeSource {
     actual fun elapsedFrom(timeMark: ValueTimeMark): Duration =
         saturatingDiff(read(), timeMark.reading)
 
+    actual fun differenceBetween(one: ValueTimeMark, another: ValueTimeMark): Duration =
+        saturatingOriginsDiff(one.reading, another.reading)
+
     actual fun adjustReading(timeMark: ValueTimeMark, duration: Duration): ValueTimeMark =
         ValueTimeMark(saturatingAdd(timeMark.reading, duration))
 }

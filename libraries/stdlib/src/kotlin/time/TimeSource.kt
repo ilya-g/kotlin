@@ -57,6 +57,16 @@ public interface TimeSource {
             override fun minus(duration: Duration): ValueTimeMark = MonotonicTimeSource.adjustReading(this, -duration)
             override fun hasPassedNow(): Boolean = !elapsedNow().isNegative()
             override fun hasNotPassedNow(): Boolean = elapsedNow().isNegative()
+
+            override fun minus(other: TimeMark): Duration {
+                if (other !is ValueTimeMark) throw IllegalArgumentException("Can compare and subtract time marks from the same time source only")
+                return this.minus(other)
+            }
+
+            public fun minus(other: ValueTimeMark): Duration = MonotonicTimeSource.differenceBetween(this, other)
+
+            public operator fun compareTo(other: ValueTimeMark): Int =
+                (this - other).compareTo(Duration.ZERO)
         }
     }
 
@@ -75,7 +85,7 @@ internal expect class ValueTimeMarkReading
  */
 @SinceKotlin("1.3")
 @ExperimentalTime
-public interface TimeMark {
+public interface TimeMark : Comparable<TimeMark> {
     /**
      * Returns the amount of time passed from this mark measured with the time source from which this mark was taken.
      *
@@ -98,7 +108,7 @@ public interface TimeMark {
      * @throws IllegalArgumentException an implementation may throw if a positive infinite duration is added to an infinitely distant past time mark or
      * a negative infinite duration is added to an infinitely distant future time mark.
      */
-    public open operator fun plus(duration: Duration): TimeMark = AdjustedTimeMark(this, duration)
+    public abstract operator fun plus(duration: Duration): TimeMark // = AdjustedTimeMark(this, duration)
 
     /**
      * Returns a time mark on the same time source that is behind this time mark by the specified [duration].
@@ -129,33 +139,61 @@ public interface TimeMark {
      * If the time source is monotonic, it can change only from `true` to `false`, namely, when the time mark becomes behind the current point of the time source.
      */
     public fun hasNotPassedNow(): Boolean = elapsedNow().isNegative()
+
+    public operator fun minus(other: TimeMark): Duration
+
+    public override operator fun compareTo(other: TimeMark): Int =
+        (this - other).compareTo(Duration.ZERO)
 }
 
 
-@ExperimentalTime
-@SinceKotlin("1.3")
-@kotlin.internal.InlineOnly
-@Deprecated(
-    "Subtracting one TimeMark from another is not a well defined operation because these time marks could have been obtained from the different time sources.",
-    level = DeprecationLevel.ERROR
-)
-@Suppress("UNUSED_PARAMETER")
-public inline operator fun TimeMark.minus(other: TimeMark): Duration = throw Error("Operation is disallowed.")
+//@ExperimentalTime
+//@SinceKotlin("1.3")
+//@kotlin.internal.InlineOnly
+//@Deprecated(
+//    "Subtracting one TimeMark from another is not a well defined operation because these time marks could have been obtained from the different time sources.",
+//    level = DeprecationLevel.ERROR
+//)
+//@Suppress("UNUSED_PARAMETER")
+//public inline operator fun TimeMark.minus(other: TimeMark): Duration = throw Error("Operation is disallowed.")
+//
+//@ExperimentalTime
+//@SinceKotlin("1.3")
+//@kotlin.internal.InlineOnly
+//@Deprecated(
+//    "Comparing one TimeMark to another is not a well defined operation because these time marks could have been obtained from the different time sources.",
+//    level = DeprecationLevel.ERROR
+//)
+//@Suppress("UNUSED_PARAMETER")
+//public inline operator fun TimeMark.compareTo(other: TimeMark): Int = throw Error("Operation is disallowed.")
 
-@ExperimentalTime
-@SinceKotlin("1.3")
-@kotlin.internal.InlineOnly
-@Deprecated(
-    "Comparing one TimeMark to another is not a well defined operation because these time marks could have been obtained from the different time sources.",
-    level = DeprecationLevel.ERROR
-)
-@Suppress("UNUSED_PARAMETER")
-public inline operator fun TimeMark.compareTo(other: TimeMark): Int = throw Error("Operation is disallowed.")
+
+//@ExperimentalTime
+//private class AdjustedTimeMark(val mark: TimeMark, val adjustment: Duration) : TimeMark {
+//    override fun elapsedNow(): Duration = mark.elapsedNow() - adjustment
+//
+//    override fun plus(duration: Duration): TimeMark = AdjustedTimeMark(mark, adjustment + duration)
+//
+//    override fun minus(other: TimeMark): Duration {
+//        // diff this - other, add adjustment? what if other is adjusted too?
+//        TODO("?")
+//    }
+//}
 
 
-@ExperimentalTime
-private class AdjustedTimeMark(val mark: TimeMark, val adjustment: Duration) : TimeMark {
-    override fun elapsedNow(): Duration = mark.elapsedNow() - adjustment
-
-    override fun plus(duration: Duration): TimeMark = AdjustedTimeMark(mark, adjustment + duration)
-}
+//@ExperimentalTime
+//public abstract class AbstractTimeMark : TimeMark {
+//    abstract override fun elapsedNow(): Duration
+//
+//    override fun plus(duration: Duration): TimeMark {
+//        TODO("Not yet implemented")
+//    }
+//
+//    override fun minus(other: TimeMark): Duration {
+//        TODO("Not yet implemented")
+//    }
+//
+//    abstract override fun equals(other: Any?): Boolean
+//
+//    abstract override fun hashCode(): Int
+//}

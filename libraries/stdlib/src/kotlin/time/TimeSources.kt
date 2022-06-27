@@ -10,6 +10,7 @@ package kotlin.time
 internal expect object MonotonicTimeSource : TimeSource {
     override fun markNow(): TimeSource.Monotonic.ValueTimeMark
     fun elapsedFrom(timeMark: TimeSource.Monotonic.ValueTimeMark): Duration
+    fun differenceBetween(one: TimeSource.Monotonic.ValueTimeMark, another: TimeSource.Monotonic.ValueTimeMark): Duration
     fun adjustReading(timeMark: TimeSource.Monotonic.ValueTimeMark, duration: Duration): TimeSource.Monotonic.ValueTimeMark
 }
 
@@ -30,6 +31,21 @@ public abstract class AbstractLongTimeSource(protected val unit: DurationUnit) :
     private class LongTimeMark(private val startedAt: Long, private val timeSource: AbstractLongTimeSource, private val offset: Duration) : TimeMark {
         override fun elapsedNow(): Duration = (timeSource.read() - startedAt).toDuration(timeSource.unit) - offset
         override fun plus(duration: Duration): TimeMark = LongTimeMark(startedAt, timeSource, offset + duration)
+        override fun minus(other: TimeMark): Duration {
+            if (other !is LongTimeMark || this.timeSource != other.timeSource)
+                throw IllegalArgumentException("diff")
+
+            // TODO: what if both offsets are infinities of the same sign or overflow to there
+            val offsetDiff = if (this.offset == other.offset) Duration.ZERO else this.offset - other.offset
+            return (this.startedAt - other.startedAt).toDuration(timeSource.unit) + offsetDiff
+        }
+
+        override fun equals(other: Any?): Boolean =
+            other is LongTimeMark && this.timeSource == other.timeSource && (this - other) == Duration.ZERO
+
+        override fun hashCode(): Int = (startedAt.toDuration(timeSource.unit) + offset).hashCode()
+
+        override fun toString(): String = "LongTimeMark($startedAt, $offset, $timeSource)"
     }
 
     override fun markNow(): TimeMark = LongTimeMark(read(), this, Duration.ZERO)
@@ -52,6 +68,22 @@ public abstract class AbstractDoubleTimeSource(protected val unit: DurationUnit)
     private class DoubleTimeMark(private val startedAt: Double, private val timeSource: AbstractDoubleTimeSource, private val offset: Duration) : TimeMark {
         override fun elapsedNow(): Duration = (timeSource.read() - startedAt).toDuration(timeSource.unit) - offset
         override fun plus(duration: Duration): TimeMark = DoubleTimeMark(startedAt, timeSource, offset + duration)
+
+        override fun minus(other: TimeMark): Duration {
+            if (other !is DoubleTimeMark || this.timeSource != other.timeSource)
+                throw IllegalArgumentException("diff")
+
+            // TODO: what if both offsets are infinities of the same sign or overflow to there
+            return (this.startedAt - other.startedAt).toDuration(timeSource.unit) + this.offset - other.offset
+        }
+
+        override fun equals(other: Any?): Boolean {
+            return other is DoubleTimeMark && this.timeSource == other.timeSource && (this - other) == Duration.ZERO
+        }
+
+        override fun hashCode(): Int {
+            return (startedAt.toDuration(timeSource.unit) + offset).hashCode()
+        }
     }
 
     override fun markNow(): TimeMark = DoubleTimeMark(read(), this, Duration.ZERO)

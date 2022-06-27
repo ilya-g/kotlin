@@ -31,6 +31,12 @@ internal actual object MonotonicTimeSource : TimeSource {
     actual fun adjustReading(timeMark: ValueTimeMark, duration: Duration): ValueTimeMark =
         ValueTimeMark(sumCheckNaN(timeMark.reading as Double + duration.toDouble(DurationUnit.MILLISECONDS)))
 
+    actual fun differenceBetween(one: ValueTimeMark, another: ValueTimeMark): Duration {
+        val ms1 = one.reading as Double
+        val ms2 = another.reading as Double
+        return if (ms1 == ms2) Duration.ZERO else (ms1 - ms2).milliseconds
+    }
+
     override fun toString(): String =
         if (performance != null) "TimeSource(globalThis.performance.now())" else "TimeSource(Date.now())"
 }
