@@ -15,7 +15,7 @@ import kotlin.time.TimeSource.Monotonic.ValueTimeMark
 internal actual typealias ValueTimeMarkReading = Any
 
 @ExperimentalTime
-internal interface DefaultTimeSource : TimeSource {
+internal interface DefaultTimeSource : TimeSource<ValueTimeMark> {
     override fun markNow(): ValueTimeMark
     fun elapsedFrom(timeMark: ValueTimeMark): Duration
     fun differenceBetween(one: ValueTimeMark, another: ValueTimeMark): Duration
@@ -24,7 +24,7 @@ internal interface DefaultTimeSource : TimeSource {
 
 @SinceKotlin("1.3")
 @ExperimentalTime
-internal actual object MonotonicTimeSource : DefaultTimeSource, TimeSource {  // TODO: interface should not be required here
+internal actual object MonotonicTimeSource : DefaultTimeSource, TimeSource<ValueTimeMark> {  // TODO: interface should not be required here
 
     private val actualSource: DefaultTimeSource = run {
         val isNode: Boolean = js("typeof process !== 'undefined' && process.versions && !!process.versions.node")

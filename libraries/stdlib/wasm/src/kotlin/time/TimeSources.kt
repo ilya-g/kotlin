@@ -20,7 +20,7 @@ private external fun dateNow(): Double
 
 @SinceKotlin("1.3")
 @ExperimentalTime
-internal actual object MonotonicTimeSource : TimeSource {
+internal actual object MonotonicTimeSource : TimeSource<ValueTimeMark> {
     private val performance: ExternalInterfaceType? = tryGetPerformance()
 
     private fun read(): Double =

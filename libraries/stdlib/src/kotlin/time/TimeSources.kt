@@ -7,7 +7,7 @@ package kotlin.time
 
 @SinceKotlin("1.3")
 @ExperimentalTime
-internal expect object MonotonicTimeSource : TimeSource {
+internal expect object MonotonicTimeSource : TimeSource<TimeSource.Monotonic.ValueTimeMark> {
     override fun markNow(): TimeSource.Monotonic.ValueTimeMark
     fun elapsedFrom(timeMark: TimeSource.Monotonic.ValueTimeMark): Duration
     fun differenceBetween(one: TimeSource.Monotonic.ValueTimeMark, another: TimeSource.Monotonic.ValueTimeMark): Duration
@@ -21,17 +21,17 @@ internal expect object MonotonicTimeSource : TimeSource {
  */
 @SinceKotlin("1.3")
 @ExperimentalTime
-public abstract class AbstractLongTimeSource(protected val unit: DurationUnit) : TimeSource {
+public abstract class AbstractLongTimeSource(protected val unit: DurationUnit) : TimeSource<ComparableTimeMark> {
     /**
      * This protected method should be overridden to return the current reading of the time source expressed as a [Long] number
      * in the unit specified by the [unit] property.
      */
     protected abstract fun read(): Long
 
-    private class LongTimeMark(private val startedAt: Long, private val timeSource: AbstractLongTimeSource, private val offset: Duration) : TimeMark {
+    private class LongTimeMark(private val startedAt: Long, private val timeSource: AbstractLongTimeSource, private val offset: Duration) : ComparableTimeMark {
         override fun elapsedNow(): Duration = (timeSource.read() - startedAt).toDuration(timeSource.unit) - offset
-        override fun plus(duration: Duration): TimeMark = LongTimeMark(startedAt, timeSource, offset + duration)
-        override fun minus(other: TimeMark): Duration {
+        override fun plus(duration: Duration): ComparableTimeMark = LongTimeMark(startedAt, timeSource, offset + duration)
+        override fun minus(other: ComparableTimeMark): Duration {
             if (other !is LongTimeMark || this.timeSource != other.timeSource)
                 throw IllegalArgumentException("diff")
 
@@ -48,7 +48,7 @@ public abstract class AbstractLongTimeSource(protected val unit: DurationUnit) :
         override fun toString(): String = "LongTimeMark($startedAt, $offset, $timeSource)"
     }
 
-    override fun markNow(): TimeMark = LongTimeMark(read(), this, Duration.ZERO)
+    override fun markNow(): ComparableTimeMark = LongTimeMark(read(), this, Duration.ZERO)
 }
 
 /**
@@ -58,23 +58,24 @@ public abstract class AbstractLongTimeSource(protected val unit: DurationUnit) :
  */
 @SinceKotlin("1.3")
 @ExperimentalTime
-public abstract class AbstractDoubleTimeSource(protected val unit: DurationUnit) : TimeSource {
+public abstract class AbstractDoubleTimeSource(protected val unit: DurationUnit) : TimeSource<ComparableTimeMark> {
     /**
      * This protected method should be overridden to return the current reading of the time source expressed as a [Double] number
      * in the unit specified by the [unit] property.
      */
     protected abstract fun read(): Double
 
-    private class DoubleTimeMark(private val startedAt: Double, private val timeSource: AbstractDoubleTimeSource, private val offset: Duration) : TimeMark {
+    private class DoubleTimeMark(private val startedAt: Double, private val timeSource: AbstractDoubleTimeSource, private val offset: Duration) : ComparableTimeMark {
         override fun elapsedNow(): Duration = (timeSource.read() - startedAt).toDuration(timeSource.unit) - offset
-        override fun plus(duration: Duration): TimeMark = DoubleTimeMark(startedAt, timeSource, offset + duration)
+        override fun plus(duration: Duration): ComparableTimeMark = DoubleTimeMark(startedAt, timeSource, offset + duration)
 
-        override fun minus(other: TimeMark): Duration {
+        override fun minus(other: ComparableTimeMark): Duration {
             if (other !is DoubleTimeMark || this.timeSource != other.timeSource)
                 throw IllegalArgumentException("diff")
 
             // TODO: what if both offsets are infinities of the same sign or overflow to there
-            return (this.startedAt - other.startedAt).toDuration(timeSource.unit) + this.offset - other.offset
+            val offsetDiff = if (this.offset == other.offset) Duration.ZERO else this.offset - other.offset
+            return (this.startedAt - other.startedAt).toDuration(timeSource.unit) + offsetDiff
         }
 
         override fun equals(other: Any?): Boolean {
@@ -86,7 +87,7 @@ public abstract class AbstractDoubleTimeSource(protected val unit: DurationUnit)
         }
     }
 
-    override fun markNow(): TimeMark = DoubleTimeMark(read(), this, Duration.ZERO)
+    override fun markNow(): ComparableTimeMark = DoubleTimeMark(read(), this, Duration.ZERO)
 }
 
 /**

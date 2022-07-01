@@ -10,7 +10,7 @@ import kotlin.time.TimeSource.Monotonic.ValueTimeMark
 
 @SinceKotlin("1.3")
 @ExperimentalTime
-internal actual object MonotonicTimeSource : TimeSource {
+internal actual object MonotonicTimeSource : TimeSource<ValueTimeMark> {
     private val zero: Long = getTimeNanos()
     private fun read(): Long = getTimeNanos() - zero
     override fun toString(): String = "TimeSource(System.nanoTime())"

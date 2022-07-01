@@ -29,7 +29,7 @@ public inline fun measureTime(block: () -> Unit): Duration {
  */
 @SinceKotlin("1.3")
 @ExperimentalTime
-public inline fun TimeSource.measureTime(block: () -> Unit): Duration {
+public inline fun TimeSource<*>.measureTime(block: () -> Unit): Duration {
     contract {
         callsInPlace(block, InvocationKind.EXACTLY_ONCE)
     }
@@ -91,7 +91,7 @@ public inline fun <T> measureTimedValue(block: () -> T): TimedValue<T> {
  */
 @SinceKotlin("1.3")
 @ExperimentalTime
-public inline fun <T> TimeSource.measureTimedValue(block: () -> T): TimedValue<T> {
+public inline fun <T> TimeSource<*>.measureTimedValue(block: () -> T): TimedValue<T> {
     contract {
         callsInPlace(block, InvocationKind.EXACTLY_ONCE)
     }
