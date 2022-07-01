@@ -11,7 +11,6 @@ import kotlin.time.*
 import kotlin.time.Duration.Companion.microseconds
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.nanoseconds
-import kotlin.time.Duration.Companion.seconds
 
 @OptIn(ExperimentalTime::class)
 class TimeMarkTest {
@@ -73,7 +72,7 @@ class TimeMarkTest {
 
     }
 
-    fun testAdjustmentInfinite(timeSource: TimeSource<ComparableTimeMark>) {
+    fun testAdjustmentInfinite(timeSource: TimeSource.WithComparableMarks) {
         val baseMark = timeSource.markNow()
         val infiniteFutureMark = baseMark + Duration.INFINITE
         val infinitePastMark = baseMark - Duration.INFINITE
@@ -117,7 +116,7 @@ class TimeMarkTest {
         testAdjustmentInfinite(TestTimeSource())
     }
 
-    fun testLongDisplacement(timeSource: TimeSource<ComparableTimeMark>, wait: (Duration) -> Unit) {
+    fun testLongDisplacement(timeSource: TimeSource.WithComparableMarks, wait: (Duration) -> Unit) {
         val baseMark = timeSource.markNow()
         val longDuration = Long.MAX_VALUE.nanoseconds
         val waitDuration = 20.milliseconds

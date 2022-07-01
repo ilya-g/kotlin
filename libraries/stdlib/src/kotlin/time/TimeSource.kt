@@ -17,14 +17,18 @@ import kotlin.jvm.JvmInline
  */
 @SinceKotlin("1.3")
 @ExperimentalTime
-public interface TimeSource<out T : TimeMark> {
+public interface TimeSource {
     /**
      * Marks a point in time on this time source.
      *
      * The returned [TimeMark] instance encapsulates the captured time point and allows querying
      * the duration of time interval [elapsed][TimeMark.elapsedNow] from that point.
      */
-    public fun markNow(): T
+    public fun markNow(): TimeMark
+
+    public interface WithComparableMarks : TimeSource {
+        override fun markNow(): ComparableTimeMark
+    }
 
     /**
      * The most precise time source available in the platform.
@@ -35,7 +39,7 @@ public interface TimeSource<out T : TimeMark> {
      * The function [markNow] of this time source returns the specialized [ValueTimeMark] that is an inline value class
      * wrapping a platform-dependent time reading value.
      */
-    public object Monotonic : TimeSource<Monotonic.ValueTimeMark> {
+    public object Monotonic : TimeSource.WithComparableMarks {
         override fun markNow(): ValueTimeMark = MonotonicTimeSource.markNow()
         override fun toString(): String = MonotonicTimeSource.toString()
 

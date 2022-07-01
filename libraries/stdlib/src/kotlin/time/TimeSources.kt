@@ -7,7 +7,7 @@ package kotlin.time
 
 @SinceKotlin("1.3")
 @ExperimentalTime
-internal expect object MonotonicTimeSource : TimeSource<TimeSource.Monotonic.ValueTimeMark> {
+internal expect object MonotonicTimeSource : TimeSource.WithComparableMarks {
     override fun markNow(): TimeSource.Monotonic.ValueTimeMark
     fun elapsedFrom(timeMark: TimeSource.Monotonic.ValueTimeMark): Duration
     fun differenceBetween(one: TimeSource.Monotonic.ValueTimeMark, another: TimeSource.Monotonic.ValueTimeMark): Duration
@@ -21,7 +21,7 @@ internal expect object MonotonicTimeSource : TimeSource<TimeSource.Monotonic.Val
  */
 @SinceKotlin("1.3")
 @ExperimentalTime
-public abstract class AbstractLongTimeSource(protected val unit: DurationUnit) : TimeSource<ComparableTimeMark> {
+public abstract class AbstractLongTimeSource(protected val unit: DurationUnit) : TimeSource.WithComparableMarks {
     /**
      * This protected method should be overridden to return the current reading of the time source expressed as a [Long] number
      * in the unit specified by the [unit] property.
@@ -58,7 +58,7 @@ public abstract class AbstractLongTimeSource(protected val unit: DurationUnit) :
  */
 @SinceKotlin("1.3")
 @ExperimentalTime
-public abstract class AbstractDoubleTimeSource(protected val unit: DurationUnit) : TimeSource<ComparableTimeMark> {
+public abstract class AbstractDoubleTimeSource(protected val unit: DurationUnit) : TimeSource.WithComparableMarks {
     /**
      * This protected method should be overridden to return the current reading of the time source expressed as a [Double] number
      * in the unit specified by the [unit] property.
