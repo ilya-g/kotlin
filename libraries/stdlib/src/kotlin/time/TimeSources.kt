@@ -5,6 +5,10 @@
 
 package kotlin.time
 
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.nanoseconds
+import kotlin.time.Duration.Companion.seconds
+
 @SinceKotlin("1.3")
 @ExperimentalTime
 internal expect object MonotonicTimeSource : TimeSource.WithComparableMarks {
@@ -29,23 +33,51 @@ public abstract class AbstractLongTimeSource(protected val unit: DurationUnit) :
     protected abstract fun read(): Long
 
     private class LongTimeMark(private val startedAt: Long, private val timeSource: AbstractLongTimeSource, private val offset: Duration) : ComparableTimeMark {
-        override fun elapsedNow(): Duration = (timeSource.read() - startedAt).toDuration(timeSource.unit) - offset
+        override fun elapsedNow(): Duration = if (offset.isInfinite()) -offset else (timeSource.read() - startedAt).toDuration(timeSource.unit) - offset
         override fun plus(duration: Duration): ComparableTimeMark = LongTimeMark(startedAt, timeSource, offset + duration)
         override fun minus(other: ComparableTimeMark): Duration {
             if (other !is LongTimeMark || this.timeSource != other.timeSource)
                 throw IllegalArgumentException("diff")
 
-            // TODO: what if both offsets are infinities of the same sign or overflow to there
-            val offsetDiff = if (this.offset == other.offset) Duration.ZERO else this.offset - other.offset
-            return (this.startedAt - other.startedAt).toDuration(timeSource.unit) + offsetDiff
+//            val thisValue = this.effectiveDuration()
+//            val otherValue = other.effectiveDuration()
+//            if (thisValue == otherValue && thisValue.isInfinite()) return Duration.ZERO
+//            return thisValue - otherValue
+            if (this.offset == other.offset && this.offset.isInfinite()) return Duration.ZERO
+            val offsetDiff = this.offset - other.offset
+            val startedAtDiff = (this.startedAt - other.startedAt).toDuration(timeSource.unit)
+//            println("$startedAtDiff, $offsetDiff")
+            return if (startedAtDiff == -offsetDiff) Duration.ZERO else startedAtDiff + offsetDiff
         }
 
         override fun equals(other: Any?): Boolean =
             other is LongTimeMark && this.timeSource == other.timeSource && (this - other) == Duration.ZERO
 
-        override fun hashCode(): Int = (startedAt.toDuration(timeSource.unit) + offset).hashCode()
+        internal fun effectiveDuration(): Duration {
+            if (offset.isInfinite()) return offset
+            val unit = timeSource.unit
+            if (unit >= DurationUnit.MILLISECONDS) {
+                return startedAt.toDuration(unit) + offset
+            }
+            val scale = convertDurationUnit(1L, DurationUnit.MILLISECONDS, unit)
+            val startedAtMillis = startedAt / scale
+            val startedAtRem = startedAt % scale
 
-        override fun toString(): String = "LongTimeMark($startedAt, $offset, $timeSource)"
+            return offset.toComponents { offsetSeconds, offsetNanoseconds ->
+                val offsetMillis = offsetNanoseconds / NANOS_IN_MILLIS
+                val offsetRemNanos = offsetNanoseconds % NANOS_IN_MILLIS
+
+                // add component-wise
+                (startedAtRem.toDuration(unit) + offsetRemNanos.nanoseconds) +
+                        (startedAtMillis + offsetMillis).milliseconds +
+                        offsetSeconds.seconds
+            }
+
+        }
+
+        override fun hashCode(): Int = effectiveDuration().hashCode()
+
+        override fun toString(): String = "LongTimeMark($startedAt${timeSource.unit.shortName()} + $offset (=${effectiveDuration()}), $timeSource)"
     }
 
     override fun markNow(): ComparableTimeMark = LongTimeMark(read(), this, Duration.ZERO)
@@ -75,7 +107,8 @@ public abstract class AbstractDoubleTimeSource(protected val unit: DurationUnit)
 
             // TODO: what if both offsets are infinities of the same sign or overflow to there
             val offsetDiff = if (this.offset == other.offset) Duration.ZERO else this.offset - other.offset
-            return (this.startedAt - other.startedAt).toDuration(timeSource.unit) + offsetDiff
+            val startedAtDiff = (this.startedAt - other.startedAt).toDuration(timeSource.unit)
+            return if (startedAtDiff == -offsetDiff) Duration.ZERO else startedAtDiff + offsetDiff
         }
 
         override fun equals(other: Any?): Boolean {
@@ -85,6 +118,8 @@ public abstract class AbstractDoubleTimeSource(protected val unit: DurationUnit)
         override fun hashCode(): Int {
             return (startedAt.toDuration(timeSource.unit) + offset).hashCode()
         }
+
+        override fun toString(): String = "DoubleTimeMark($startedAt${timeSource.unit.shortName()} + $offset, $timeSource)"
     }
 
     override fun markNow(): ComparableTimeMark = DoubleTimeMark(read(), this, Duration.ZERO)

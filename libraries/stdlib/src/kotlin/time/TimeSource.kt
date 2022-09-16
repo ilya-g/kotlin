@@ -26,6 +26,11 @@ public interface TimeSource {
      */
     public fun markNow(): TimeMark
 
+    /**
+     * A [TimeSource] that returns [time marks][ComparableTimeMark] that can be compared for difference with each other.
+     */
+    @SinceKotlin("1.8")
+    @ExperimentalTime
     public interface WithComparableMarks : TimeSource {
         override fun markNow(): ComparableTimeMark
     }
@@ -67,8 +72,22 @@ public interface TimeSource {
                 return this.minus(other)
             }
 
+            /**
+             * Returns the duration elapsed from the [other] time mark obtained from the same [TimeSource.Monotonic] time source and `this` time mark.
+             */
             public fun minus(other: ValueTimeMark): Duration = MonotonicTimeSource.differenceBetween(this, other)
 
+            /**
+             * Compares this time mark with the [other] time mark for order.
+             *
+             * - Returns zero if this time mark represents *the same moment* of time as the [other] time mark.
+             * - Returns a negative number if this time mark is *earlier* than the [other] time mark.
+             * - Returns a positive number if this time mark is *later* than the [other] time mark.
+             *
+             * Note that the other time mark must be obtained from the same time source as this one.
+             *
+             * @throws IllegalArgumentException if time marks were obtained from different time sources.
+             */
             public operator fun compareTo(other: ValueTimeMark): Int =
                 (this - other).compareTo(Duration.ZERO)
         }
@@ -145,40 +164,45 @@ public interface TimeMark {
     public fun hasNotPassedNow(): Boolean = elapsedNow().isNegative()
 }
 
+/**
+ * A [TimeMark] that can be compared for difference with other time marks obtained from the same [TimeSource.WithComparableMarks].
+ */
+@SinceKotlin("1.8")
 @ExperimentalTime
 public interface ComparableTimeMark : TimeMark, Comparable<ComparableTimeMark> {
     public abstract override operator fun plus(duration: Duration): ComparableTimeMark
     public open override operator fun minus(duration: Duration): ComparableTimeMark = plus(-duration)
 
+    /**
+     * Returns the duration elapsed from the [other] time mark and `this` time mark.
+     *
+     * Note that the other time mark must be obtained from the same time source as this one.
+     *
+     * @throws IllegalArgumentException if time marks were obtained from different time sources.
+     */
     public operator fun minus(other: ComparableTimeMark): Duration
 
+    /**
+     * Compares this time mark with the [other] time mark for order.
+     *
+     * - Returns zero if this time mark represents *the same moment* of time as the [other] time mark.
+     * - Returns a negative number if this time mark is *earlier* than the [other] time mark.
+     * - Returns a positive number if this time mark is *later* than the [other] time mark.
+     *
+     * Note that the other time mark must be obtained from the same time source as this one.
+     *
+     * @throws IllegalArgumentException if time marks were obtained from different time sources.
+     */
     public override operator fun compareTo(other: ComparableTimeMark): Int =
         (this - other).compareTo(Duration.ZERO)
 
+    /**
+     * Returns `true` if two time marks from the same time source represent the same moment of time, and `false` otherwise,
+     * including the situation when the time marks were obtained from different time sources.
+     */
     override fun equals(other: Any?): Boolean
     override fun hashCode(): Int
 }
-
-
-//@ExperimentalTime
-//@SinceKotlin("1.3")
-//@kotlin.internal.InlineOnly
-//@Deprecated(
-//    "Subtracting one TimeMark from another is not a well defined operation because these time marks could have been obtained from the different time sources.",
-//    level = DeprecationLevel.ERROR
-//)
-//@Suppress("UNUSED_PARAMETER")
-//public inline operator fun TimeMark.minus(other: TimeMark): Duration = throw Error("Operation is disallowed.")
-//
-//@ExperimentalTime
-//@SinceKotlin("1.3")
-//@kotlin.internal.InlineOnly
-//@Deprecated(
-//    "Comparing one TimeMark to another is not a well defined operation because these time marks could have been obtained from the different time sources.",
-//    level = DeprecationLevel.ERROR
-//)
-//@Suppress("UNUSED_PARAMETER")
-//public inline operator fun TimeMark.compareTo(other: TimeMark): Int = throw Error("Operation is disallowed.")
 
 
 @ExperimentalTime
@@ -188,21 +212,3 @@ private class AdjustedTimeMark(val mark: TimeMark, val adjustment: Duration) : T
     override fun plus(duration: Duration): TimeMark = AdjustedTimeMark(mark, adjustment + duration)
 
 }
-
-
-//@ExperimentalTime
-//public abstract class AbstractTimeMark : TimeMark {
-//    abstract override fun elapsedNow(): Duration
-//
-//    override fun plus(duration: Duration): TimeMark {
-//        TODO("Not yet implemented")
-//    }
-//
-//    override fun minus(other: TimeMark): Duration {
-//        TODO("Not yet implemented")
-//    }
-//
-//    abstract override fun equals(other: Any?): Boolean
-//
-//    abstract override fun hashCode(): Int
-//}
