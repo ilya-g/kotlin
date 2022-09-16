@@ -65,14 +65,15 @@ internal class HrTimeSource(private val process: Process) : DefaultTimeSource {
     override fun differenceBetween(one: ValueTimeMark, another: ValueTimeMark): Duration {
         val (s1, n1) = one.reading as Array<Double>
         val (s2, n2) = another.reading as Array<Double>
-        return (if (s1 == s2) Duration.ZERO else (s1 - s2).toDuration(DurationUnit.SECONDS)) + (n1 - n2).toDuration(DurationUnit.NANOSECONDS)
+        return (if (s1 == s2 && n1 == n2) Duration.ZERO else (s1 - s2).toDuration(DurationUnit.SECONDS)) + (n1 - n2).toDuration(DurationUnit.NANOSECONDS)
     }
 
     override fun adjustReading(timeMark: ValueTimeMark, duration: Duration): ValueTimeMark =
         @Suppress("UNCHECKED_CAST")
         (timeMark.reading as Array<Double>).let { (seconds, nanos) ->
             duration.toComponents { _, addNanos ->
-                arrayOf<Double>(sumCheckNaN(seconds + truncate(duration.toDouble(DurationUnit.SECONDS))), nanos + addNanos)
+                val resultSeconds = sumCheckNaN(seconds + truncate(duration.toDouble(DurationUnit.SECONDS)))
+                arrayOf<Double>(resultSeconds, if (resultSeconds.isFinite()) nanos + addNanos else 0.0)
             }
         }.let(TimeSource.Monotonic::ValueTimeMark)
 
