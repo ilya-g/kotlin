@@ -49,13 +49,16 @@ public interface TimeSource {
         override fun toString(): String = MonotonicTimeSource.toString()
 
         /**
-         * A specialized [kotlin.time.TimeMark] returned by [TimeSource.Monotonic].
+         * A specialized [kotlin.time.TimeMark] returned by [TimeSource.Monotonic] time source.
          *
          * This time mark is implemented as an inline value class wrapping a platform-dependent
          * time reading value of the default monotonic time source, thus allowing to avoid additional boxing
          * of that value.
          *
          * The operations [plus] and [minus] are also specialized to return [ValueTimeMark] type.
+         *
+         * This time mark implements [ComparableTimeMark] and therefore is comparable with other time marks
+         * obtained from the same [TimeSource.Monotonic] time source.
          */
         @ExperimentalTime
         @SinceKotlin("1.7")
@@ -68,14 +71,23 @@ public interface TimeSource {
             override fun hasNotPassedNow(): Boolean = elapsedNow().isNegative()
 
             override fun minus(other: ComparableTimeMark): Duration {
-                if (other !is ValueTimeMark) throw IllegalArgumentException("Can compare and subtract time marks from the same time source only")
+                if (other !is ValueTimeMark)
+                    throw IllegalArgumentException("Subtracting or comparing time marks from different time sources is not possible: $this and $other")
                 return this.minus(other)
             }
 
             /**
-             * Returns the duration elapsed from the [other] time mark obtained from the same [TimeSource.Monotonic] time source and `this` time mark.
+             * Returns the duration elapsed between the [other] time mark obtained from the same [TimeSource.Monotonic] time source and `this` time mark.
+             *
+             * The returned duration can be infinite if the time marks are far away from each other and
+             * the result doesn't fit into [Duration] type,
+             * or if one time mark is infinitely distant, or if both `this` and [other] time marks
+             * lie infinitely distant on the opposite sides of the time scale.
+             *
+             * Two infinitely distant time marks on the same side of the time scale are considered equal and
+             * the duration between them is [Duration.ZERO].
              */
-            public fun minus(other: ValueTimeMark): Duration = MonotonicTimeSource.differenceBetween(this, other)
+            public operator fun minus(other: ValueTimeMark): Duration = MonotonicTimeSource.differenceBetween(this, other)
 
             /**
              * Compares this time mark with the [other] time mark for order.
@@ -83,10 +95,6 @@ public interface TimeSource {
              * - Returns zero if this time mark represents *the same moment* of time as the [other] time mark.
              * - Returns a negative number if this time mark is *earlier* than the [other] time mark.
              * - Returns a positive number if this time mark is *later* than the [other] time mark.
-             *
-             * Note that the other time mark must be obtained from the same time source as this one.
-             *
-             * @throws IllegalArgumentException if time marks were obtained from different time sources.
              */
             public operator fun compareTo(other: ValueTimeMark): Int =
                 (this - other).compareTo(Duration.ZERO)
@@ -174,7 +182,15 @@ public interface ComparableTimeMark : TimeMark, Comparable<ComparableTimeMark> {
     public open override operator fun minus(duration: Duration): ComparableTimeMark = plus(-duration)
 
     /**
-     * Returns the duration elapsed from the [other] time mark and `this` time mark.
+     * Returns the duration elapsed between the [other] time mark and `this` time mark.
+     *
+     * The returned duration can be infinite if the time marks are far away from each other and
+     * the result doesn't fit into [Duration] type,
+     * or if one time mark is infinitely distant, or if both `this` and [other] time marks
+     * lie infinitely distant on the opposite sides of the time scale.
+     *
+     * Two infinitely distant time marks on the same side of the time scale are considered equal and
+     * the duration between them is [Duration.ZERO].
      *
      * Note that the other time mark must be obtained from the same time source as this one.
      *

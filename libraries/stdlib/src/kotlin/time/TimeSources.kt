@@ -37,7 +37,7 @@ public abstract class AbstractLongTimeSource(protected val unit: DurationUnit) :
         override fun plus(duration: Duration): ComparableTimeMark = LongTimeMark(startedAt, timeSource, offset + duration)
         override fun minus(other: ComparableTimeMark): Duration {
             if (other !is LongTimeMark || this.timeSource != other.timeSource)
-                throw IllegalArgumentException("diff")
+                throw IllegalArgumentException("Subtracting or comparing time marks from different time sources is not possible: $this and $other")
 
 //            val thisValue = this.effectiveDuration()
 //            val otherValue = other.effectiveDuration()
@@ -105,10 +105,10 @@ public abstract class AbstractDoubleTimeSource(protected val unit: DurationUnit)
 
         override fun minus(other: ComparableTimeMark): Duration {
             if (other !is DoubleTimeMark || this.timeSource != other.timeSource)
-                throw IllegalArgumentException("diff")
+                throw IllegalArgumentException("Subtracting or comparing time marks from different time sources is not possible: $this and $other")
 
-            // TODO: what if both offsets are infinities of the same sign or overflow to there
-            val offsetDiff = if (this.offset == other.offset) Duration.ZERO else this.offset - other.offset
+            if (this.offset == other.offset && this.offset.isInfinite()) return Duration.ZERO
+            val offsetDiff = this.offset - other.offset
             val startedAtDiff = (this.startedAt - other.startedAt).toDuration(timeSource.unit)
             return if (startedAtDiff == -offsetDiff) Duration.ZERO else startedAtDiff + offsetDiff
         }
@@ -174,6 +174,6 @@ public class TestTimeSource : AbstractLongTimeSource(unit = DurationUnit.NANOSEC
     }
 
     private fun overflow(duration: Duration) {
-        throw IllegalStateException("TestTimeSource will overflow if its reading ${reading}ns is advanced by $duration.")
+        throw IllegalStateException("TestTimeSource will overflow if its reading ${reading}${unit.shortName()} is advanced by $duration.")
     }
 }

@@ -617,7 +617,7 @@ public interface TimeSource {
 
             public open override operator fun minus(duration: kotlin.time.Duration): kotlin.time.TimeSource.Monotonic.ValueTimeMark
 
-            public final fun minus(other: kotlin.time.TimeSource.Monotonic.ValueTimeMark): kotlin.time.Duration
+            public final operator fun minus(other: kotlin.time.TimeSource.Monotonic.ValueTimeMark): kotlin.time.Duration
 
             public open override operator fun plus(duration: kotlin.time.Duration): kotlin.time.TimeSource.Monotonic.ValueTimeMark
 
