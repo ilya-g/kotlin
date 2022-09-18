@@ -56,8 +56,7 @@ class TimeMarkTest {
         assertEquals(elapsedDiff, elapsed)
 
         val markToElapsed = mark + elapsedDiff
-        assertEquals(markElapsed, markToElapsed)
-        assertEquals(markElapsed.hashCode(), markToElapsed.hashCode())
+        assertEqualMarks(markElapsed, markToElapsed)
 
         assertEquals(elapsedFromPast, markPast1.elapsedNow())
         assertEquals(elapsedFromPast, markPast2.elapsedNow())
@@ -84,8 +83,8 @@ class TimeMarkTest {
         assertEquals(Duration.INFINITE, infiniteFutureMark - infinitePastMark)
         assertEquals(Duration.INFINITE, infiniteFutureMark - baseMark)
         assertEquals(-Duration.INFINITE, infinitePastMark - baseMark)
-        assertEquals(Duration.ZERO, infiniteFutureMark - infiniteFutureMark)
-        assertEquals(Duration.ZERO, infinitePastMark - infinitePastMark)
+        assertEqualMarks(infiniteFutureMark, infiniteFutureMark)
+        assertEqualMarks(infinitePastMark, infinitePastMark)
 
         assertEquals(-Duration.INFINITE, infiniteFutureMark.elapsedNow())
         assertTrue(infiniteFutureMark.hasNotPassedNow())
