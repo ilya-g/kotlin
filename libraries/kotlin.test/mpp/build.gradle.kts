@@ -267,7 +267,7 @@ tasks {
         val patchedFile = file("kotlin-project-structure-metadata.json")
 
         inputs.file(patchedFile)
-//        inputs.file(outputTestFile)
+        inputs.file(outputTestFile)
 
         doLast {
             /*
@@ -276,12 +276,12 @@ tasks {
              */
             run {
                 val outputFileText = outputFile.readText().trim()
-//                val expectedFileContent = outputTestFile.readText().trim()
-//                if (outputFileText != expectedFileContent)
-//                    error(
-//                        "${outputFile.path} file content does not match expected content\n\n" +
-//                                "expected:\n\n$expectedFileContent\n\nactual:\n\n$outputFileText"
-//                    )
+                val expectedFileContent = outputTestFile.readText().trim()
+                if (outputFileText != expectedFileContent)
+                    error(
+                        "${outputFile.path} file content does not match expected content\n\n" +
+                                "expected:\n\n$expectedFileContent\n\nactual:\n\n$outputFileText"
+                    )
             }
 
             patchedFile.copyTo(outputFile, overwrite = true)
