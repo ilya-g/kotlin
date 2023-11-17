@@ -18,7 +18,7 @@ plugins {
 }
 
 description = "Kotlin Test Library"
-base.archivesName = "kotlin-test-mpp"
+base.archivesName = "kotlin-test"
 
 configureJvmToolchain(JdkMajorVersion.JDK_1_8)
 
@@ -207,6 +207,7 @@ tasks {
         manifestAttributes(manifest, "Test", multiRelease = true)
     }
     val jvmSourcesJar by existing(Jar::class) {
+        archiveAppendix = null
         kotlin.sourceSets["annotationsCommonMain"].let { sourceSet ->
             into(sourceSet.name) {
                 from(sourceSet.kotlin)
