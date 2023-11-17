@@ -679,6 +679,13 @@ tasks.withType<GenerateModuleMetadata> {
     val publication = publication.get() as MavenPublication
     // alter capabilities of leaf JVM framework artifacts published by "available-at" coordinates
     if (jvmTestFrameworks.map { it.lowercase() }.any { publication.artifactId.endsWith(it) }) {
+        fun capability(group: String, name: String, version: String) =
+            mapOf("group" to group, "name" to name, "version" to version)
+
+        val defaultCapability = publication.let { capability(it.groupId, it.artifactId, it.version) }
+        val implCapability = implCapability.split(":").let { (g, n, v) -> capability(g, n, v) }
+        val capabilities = listOf(defaultCapability, implCapability)
+
         doLast {
             val output = outputFile.get().asFile
             val gson = GsonBuilder().setPrettyPrinting().create()
@@ -687,6 +694,7 @@ tasks.withType<GenerateModuleMetadata> {
             variants.forEach { variant ->
                 variant as JsonObject
                 variant.remove("capabilities")
+                variant.add("capabilities", gson.toJsonTree(capabilities))
             }
             output.bufferedWriter().use { writer -> gson.toJson(moduleJson, writer) }
         }
