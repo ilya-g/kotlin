@@ -8,7 +8,6 @@ import org.jetbrains.kotlin.gradle.targets.js.dsl.KotlinTargetWithNodeJsDsl
 import org.jetbrains.kotlin.gradle.targets.js.dsl.KotlinWasmTargetDsl
 import org.jetbrains.kotlin.gradle.targets.js.ir.KotlinJsIrLink
 import org.jetbrains.kotlin.gradle.tasks.AbstractKotlinCompile
-import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 import org.jetbrains.kotlin.gradle.tasks.UsesKotlinJavaToolchain
 import plugins.configureDefaultPublishing
 import plugins.configureKotlinPomAttributes
@@ -174,9 +173,6 @@ kotlin {
                         }
                         // This is needed for JavaTypeTest; typeOf for non-reified type parameters doesn't work otherwise, for implementation reasons.
                         freeCompilerArgs -= "-Xno-optimized-callable-references"
-                    }
-                    doFirst {
-                        (this as KotlinJvmCompile).libraries.forEach(::println)
                     }
                 }
             }

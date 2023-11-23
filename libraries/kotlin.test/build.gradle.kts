@@ -365,9 +365,6 @@ configurations {
             add(sourcesElements.name, tasks.named<Jar>("jvm${framework}SourcesJar"))
         }
     }
-    all {
-        println(name)
-    }
 
     for (configurationName in listOf("kotlinTestCommon", "kotlinTestAnnotationsCommon")) {
         val legacyConfigurationDeps = create("${configurationName}Dependencies") {
