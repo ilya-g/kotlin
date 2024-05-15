@@ -34,3 +34,9 @@ public actual open class Throwable actual constructor(public actual open val mes
         return if (message != null) s + ": " + message.toString() else s
     }
 }
+
+internal actual var Throwable.suppressedExceptionsList: MutableList<Throwable>?
+    get() = this.suppressedExceptionsList
+    set(value) { this.suppressedExceptionsList = value }
+
+internal actual val Throwable.stack: String get() = this.stack
