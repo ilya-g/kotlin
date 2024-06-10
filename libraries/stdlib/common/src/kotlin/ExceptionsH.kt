@@ -46,10 +46,13 @@ public expect open class IndexOutOfBoundsException : RuntimeException {
     public constructor(message: String?)
 }
 
+@Suppress("EXPECT_ACTUAL_INCOMPATIBILITY")
 public expect open class ConcurrentModificationException : RuntimeException {
     public constructor()
     public constructor(message: String?)
+    @Suppress("EXPECT_ACTUAL_MISMATCH") // no such constructor in JDK 6 symbols
     public constructor(message: String?, cause: Throwable?)
+    @Suppress("EXPECT_ACTUAL_MISMATCH") // no such constructor in JDK 6 symbols
     public constructor(cause: Throwable?)
 }
 
@@ -75,11 +78,13 @@ public expect open class ClassCastException : RuntimeException {
     public constructor(message: String?)
 }
 
+@Suppress("EXPECT_ACTUAL_INCOMPATIBILITY")
 public expect open class AssertionError : Error {
     public constructor()
     public constructor(message: Any?)
 
     @SinceKotlin("1.9")
+    @Suppress("EXPECT_ACTUAL_MISMATCH") // no such constructor in JDK 6 symbols
     public constructor(message: String?, cause: Throwable?)
 }
 
